@@ -195,7 +195,7 @@ export default function Game({ userId, roomId, isHost, onExit }: GameProps) {
 
     const jumpPressed = k['Space'] || k[' '] || k['ArrowUp'] || k['KeyW'] || k['w'];
     if (jumpPressed && p.onGround) {
-      p.vy = -10.5;
+      p.vy = -12;
       p.onGround = false;
       audio.playJump();
       audio.playMusic(); // Ensure music starts
@@ -207,9 +207,13 @@ export default function Game({ userId, roomId, isHost, onExit }: GameProps) {
     // Collisions
     p.onGround = false;
     for (const plat of platformsRef.current) {
-      if (p.x + p.width > plat.x && p.x < plat.x + plat.w &&
-          p.y + p.height > plat.y && p.y + p.height < plat.y + plat.h &&
-          p.vy >= 0) {
+      // Robust platform collision: check if we just passed through the top surface
+      const wasAbove = (p.y + p.height - p.vy) <= plat.y;
+      const isInsideX = p.x + p.width > plat.x && p.x < plat.x + plat.w;
+      const isBelowTop = p.y + p.height >= plat.y;
+      const isAboveBottom = p.y + p.height <= plat.y + plat.h + Math.max(0, p.vy);
+
+      if (isInsideX && isBelowTop && wasAbove && p.vy >= 0) {
         p.y = plat.y - p.height;
         p.vy = 0;
         p.onGround = true;

@@ -165,9 +165,11 @@ async function startServer() {
     
     npc.onGround = false;
     for (const p of room.platforms) {
-      if (npc.x + 30 > p.x && npc.x < p.x + p.w &&
-          npc.y + 30 > p.y && npc.y + 30 < p.y + p.h &&
-          npc.vy >= 0) {
+      const wasAbove = (npc.y + 30 - npc.vy) <= p.y;
+      const isInsideX = npc.x + 30 > p.x && npc.x < p.x + p.w;
+      const isBelowTop = npc.y + 30 >= p.y;
+      
+      if (isInsideX && isBelowTop && wasAbove && npc.vy >= 0) {
         npc.y = p.y - 30;
         npc.vy = 0;
         npc.onGround = true;
