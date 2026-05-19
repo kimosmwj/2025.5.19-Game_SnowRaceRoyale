@@ -1,0 +1,6 @@
+{
+  "name": "Snow Race Royale",
+  "description": "A 2D multiplayer platformer where players compete to collect food while avoiding bombs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
