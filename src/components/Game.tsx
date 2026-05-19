@@ -157,6 +157,7 @@ export default function Game({ userId, roomId, isHost, onExit }: GameProps) {
       cancelAnimationFrame(frameId);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      audio.stopAll();
     };
   }, []);
 

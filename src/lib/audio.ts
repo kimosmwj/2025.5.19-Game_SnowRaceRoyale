@@ -7,6 +7,9 @@ export class GameAudio {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
 
+  private isMusicPlaying = false;
+  private musicTimeout: any = null;
+
   init() {
     if (this.ctx) return;
     this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -15,9 +18,16 @@ export class GameAudio {
     this.masterGain.connect(this.ctx.destination);
   }
 
+  // Stop everything on cleanup
+  stopAll() {
+    if (this.musicTimeout) clearTimeout(this.musicTimeout);
+    this.isMusicPlaying = false;
+  }
+
   // Play a simple "ding" sound
   playCollect() {
     if (!this.ctx || !this.masterGain) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     
@@ -38,6 +48,7 @@ export class GameAudio {
   // Play a simple explosion sound
   playExplosion() {
     if (!this.ctx || !this.masterGain) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
     const bufferSize = this.ctx.sampleRate * 0.3;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -67,6 +78,7 @@ export class GameAudio {
   // Play jump sound
   playJump() {
     if (!this.ctx || !this.masterGain) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     
@@ -86,8 +98,10 @@ export class GameAudio {
 
   // Looping 8-bit BGM
   playMusic() {
-    if (!this.ctx || !this.masterGain) return;
-    const now = this.ctx.currentTime;
+    if (!this.ctx || !this.masterGain || this.isMusicPlaying) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    this.isMusicPlaying = true;
+    
     const tempo = 120;
     const quarterNote = 60 / tempo;
     
@@ -112,14 +126,17 @@ export class GameAudio {
       osc.stop(time + quarterNote * 0.8);
     };
 
-    let time = now;
-    for (let i = 0; i < melody.length; i++) {
-      playNote(melody[i], time);
-      time += quarterNote / 2;
-    }
-    
-    // Repeat music after 8 seconds (cheap loop)
-    setTimeout(() => this.playMusic(), melody.length * (60 / tempo / 2) * 1000);
+    const loop = () => {
+      if (!this.isMusicPlaying || !this.ctx) return;
+      let time = this.ctx.currentTime + 0.1;
+      for (let i = 0; i < melody.length; i++) {
+        playNote(melody[i], time);
+        time += quarterNote / 2;
+      }
+      this.musicTimeout = setTimeout(loop, melody.length * (60 / tempo / 2) * 1000);
+    };
+
+    loop();
   }
 }
 
